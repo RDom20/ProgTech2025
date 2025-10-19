@@ -1,7 +1,21 @@
-# Amőba játék
-Készítette: Ruska Dominik(FD69KA)
+# Amőba Játék
 
-## Játék alapok
-User kezd és lerak 1 piros X-et majd AI random lerak egy kék O-t. Ezután user lerak mégegyet és ha a 2 összefügg (vízszintesen, fügőlegesen vagy átlósan) akkor az AI ezt érzékeli és megakadályozza hogy 3 legyen belőle.
-Ez megy addig ameddig valakinek nem lesz 4 ugyanis akkor az nyert
+Készítette: Ruska Dominik (FD69KA)
 
+## Játék Alapok
+
+A játék két játékos között zajlik: az egyik a felhasználó (User), a másik pedig az AI (Mesterséges Intelligencia).
+
+Kezdés: A felhasználó kezd, és lerak egy piros X-et.
+
+AI lépése: Ezután az AI véletlenszerűen lerak egy kék O-t.
+
+Felhasználó lépése: A felhasználó ismét lerak egy X-et, és a játék folytatódik, amíg valaki eléri a győzelmet.
+
+## Játékszabályok
+
+A cél az, hogy összefűzz 4 saját jelölőt (X vagy O) vízszintesen, függőlegesen vagy átlósan.
+
+Ha a felhasználó két X-et helyez el, és azok összefüggnek (vagyis egy egyenes vonalon állnak), az AI észleli ezt, és megakadályozza, hogy a felhasználó 3 egymás melletti X-et helyezzen el.
+
+A játék addig folytatódik, amíg valaki elér egy 4 egymás melletti jelet. Az első, aki ezt eléri, nyer.
