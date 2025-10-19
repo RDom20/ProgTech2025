@@ -1,8 +1,8 @@
 package hu.nye.progtech.domain;
 
 public class Player {
-    private final String name;
-    private final char symbol;
+    private String name;
+    private char symbol;
 
     public Player(String name, char symbol) {
         this.name = name;

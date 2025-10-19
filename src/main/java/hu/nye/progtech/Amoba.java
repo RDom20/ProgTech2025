@@ -3,8 +3,12 @@ package hu.nye.progtech;
 import hu.nye.progtech.domain.Board;
 import hu.nye.progtech.domain.Coordinate;
 import hu.nye.progtech.domain.Player;
+import hu.nye.progtech.service.Game;
 import hu.nye.progtech.service.GameService;
 
+import java.io.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class Amoba {
@@ -29,6 +33,9 @@ public class Amoba {
         // Játék tábla létrehozása
         Board board = new Board(MAP_SIZE);  // 10x10-es tábla
 
+        Game game = new Game();  // Game objektum létrehozása
+        game.startGame();  // A játék indítása
+
         boolean gameOver = false;
         boolean isPlayerTurn = true;  // A játékos kezd
         boolean isAIFirstMove = true;  // Egy változó, hogy kövessük, hogy az AI lépett-e már
@@ -49,6 +56,19 @@ public class Amoba {
 
                     if (columnInput.matches("[A-J]")) {
                         col = columnInput.charAt(0) - 'A';
+                    } else if (columnInput.equalsIgnoreCase("esc")) {
+                        System.out.print("Szeretnéd menteni a játékot? (Igen/Nem): ");
+                        String saveAnswer = scanner.nextLine();
+                        List<String> acceptedSaveAnswers = Arrays.asList("igen", "i");
+
+                        if (acceptedSaveAnswers.contains(saveAnswer)) {
+                            saveGame(board, player, ai);  // Játék mentése
+                            System.out.println("Játék mentve!");
+                        } else {
+                            System.out.println("A játék nem lett mentve.");
+                        }
+                        System.out.println("Kilépés...");
+                        return;
                     }
 
                     System.out.print("Sor (1-10): ");
@@ -145,6 +165,43 @@ public class Amoba {
                 }
             }
             System.out.println();  // Sor vége
+        }
+    }
+
+    // Játék mentése fájlba
+    private static void saveGame(Board board, Player player, Player ai) {
+        File saveFile = new File("game_save.md");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(saveFile))) {
+            // Játékos adatok írása
+            writer.write("Játékos: " + player.getName() + " (" + player.getSymbol() + ")\n");
+            writer.write("AI: " + ai.getName() + " (" + ai.getSymbol() + ")\n");
+
+            // Tábla mentése
+            writer.write("Tábla:\n");
+            // Fejléc kiírása (A, B, C, ... oszlopok)
+            writer.write("\n    ");  // A fejléchez megfelelő eltolás
+            for (char c = 'A'; c < 'A' + board.getSize(); c++) {
+                writer.write(String.format("%-3c", c));  // Oszlopok (A-J) balra igazítva
+            }
+            writer.write("\n");
+
+            // Táblázat megjelenítése
+            for (int i = 0; i < board.getSize(); i++) {
+                writer.write(String.format("%-3d", i + 1));  // Sorok (1-10) balra igazítva
+                for (int j = 0; j < board.getSize(); j++) {
+                    char cell = board.getCell(i, j);
+                    if (cell == 'X') {
+                        writer.write(" X ");  // X
+                    } else if (cell == 'O') {
+                        writer.write(" O ");  // O
+                    } else {
+                        writer.write(" □ ");  // Üres cella (□)
+                    }
+                }
+                writer.write("\n");  // Sor vége
+            }
+        } catch (IOException e) {
+            System.out.println("Hiba történt a játék mentésekor: " + e.getMessage());
         }
     }
 }

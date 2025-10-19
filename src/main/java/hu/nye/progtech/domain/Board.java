@@ -1,40 +1,54 @@
 package hu.nye.progtech.domain;
 
 public class Board {
-    private final int size;
-    private final char[][] cells;
+    private char[][] grid;
+    private int size;
 
     public Board(int size) {
         this.size = size;
-        cells = new char[size][size];
+        grid = new char[size][size];
+        // Initialize the board with empty cells
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                cells[i][j] = '.';  // Minden mező üres, '.'
+                grid[i][j] = '.'; // '.' represents an empty cell
             }
         }
-    }
-
-    public char getCell(int row, int col) {
-        return cells[row][col];
-    }
-
-    public void placeSymbol(int row, int col, char symbol) {
-        cells[row][col] = symbol;
     }
 
     public int getSize() {
-        return size;  // Visszaadja a tábla méretét
+        return size;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
+    public char getCell(int row, int col) {
+        return grid[row][col];
+    }
+
+    // Add the setCell method to set the value of a specific cell
+    public void setCell(int row, int col, char symbol) {
+        if (row >= 0 && row < size && col >= 0 && col < size) {
+            grid[row][col] = symbol;
+        } else {
+            System.out.println("Invalid position!");
+        }
+    }
+
+    // Add the placeSymbol method to allow placing symbols on the board
+    public void placeSymbol(int row, int col, char symbol) {
+        if (row >= 0 && row < size && col >= 0 && col < size) {
+            grid[row][col] = symbol;
+        } else {
+            System.out.println("Invalid position!");
+        }
+    }
+
+    // Optional: You can also add a method to print the board for debugging
+    public void printBoard() {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                sb.append(cells[i][j]).append(" ");
+                System.out.print(grid[i][j] + " ");
             }
-            sb.append("\n");
+            System.out.println();
         }
-        return sb.toString();
     }
 }
+
