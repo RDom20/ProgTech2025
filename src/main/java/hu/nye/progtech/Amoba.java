@@ -82,6 +82,9 @@ public class Amoba {
 
                 if (aiMove != null) {
                     board.placeSymbol(aiMove.getRow(), aiMove.getCol(), ai.getSymbol());
+                    // AI lépésének kiírása
+                    System.out.println("AI köre: AI (" + ai.getSymbol() + ")");
+                    System.out.println("AI lépése: Oszlop " + (char) ('A' + aiMove.getCol()) + ", Sor " + (aiMove.getRow() + 1));
                 }
 
                 if (service.hasWon(board, ai.getSymbol())) {
