@@ -1,22 +1,19 @@
 package hu.nye.progtech.domain;
 
-public final class Player {
-
+public class Player {
     private final String name;
+    private final char symbol;
 
-    public Player(final String name) {
+    public Player(String name, char symbol) {
         this.name = name;
+        this.symbol = symbol;
     }
 
     public String getName() {
         return name;
     }
 
-
-    @Override
-    public String toString() {
-        return "Player{" +
-                "name='" + name + '\'' +
-                '}';
+    public char getSymbol() {
+        return symbol;
     }
 }
