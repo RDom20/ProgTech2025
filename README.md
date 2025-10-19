@@ -1,4 +1,4 @@
-# Amoba játék
+# Amőba játék
 Készítette: Ruska Dominik(FD69KA)
 
 ## Játék alapok
