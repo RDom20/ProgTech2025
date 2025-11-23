@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Random;
 
 public class GameService {
-    private static final int WIN_LENGTH = 4;  // Nyerési hossz
+    private static final int WIN_LENGTH = 5;  // Nyerési hossz
     private final Random random = new Random();
     private static final int MAP_SIZE = 10;  // Tábla mérete (10x10-es tábla)
 

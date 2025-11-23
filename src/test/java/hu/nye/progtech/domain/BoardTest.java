@@ -1,38 +1,37 @@
 package hu.nye.progtech.domain;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BoardTest {
-
-    private Board board;
-
-    @BeforeEach
-    public void setUp() {
-        board = new Board(10); // 10x10-es tábla
-    }
+class BoardTest {
 
     @Test
-    public void testInitialBoardEmpty() {
-        for (int row = 0; row < board.getSize(); row++) {
-            for (int col = 0; col < board.getSize(); col++) {
-                assertEquals('.', board.getCell(row, col), "Board-nak alapból üres kell lennie");
+    void testBoardInitialization() {
+        Board board = new Board(10);
+
+        assertEquals(10, board.getSize());
+        assertEquals('X', board.getCurrentPlayer());
+
+        for (int r = 0; r < 10; r++) {
+            for (int c = 0; c < 10; c++) {
+                assertEquals('.', board.getCell(r, c));
             }
         }
     }
 
     @Test
-    public void testPlaceSymbol() {
-        board.placeSymbol(0, 0, 'X');
-        assertEquals('X', board.getCell(0, 0), "Cell-nek 'X' szimbólumot kellene tartalmaznia");
+    void testSetAndGetCell() {
+        Board board = new Board(10);
+        board.setCell(2, 3, 'X');
+
+        assertEquals('X', board.getCell(2, 3));
     }
 
     @Test
-    public void testToString() {
-        board.placeSymbol(0, 0, 'X');
-        String boardString = board.toString();
-        assertTrue(boardString.contains("X"), "Board string-ben benne kellene lennie az 'X' szimbólumnak, ha az helyesen volt elhelyezve");
+    void testSetCurrentPlayer() {
+        Board board = new Board(10);
+        board.setCurrentPlayer('O');
+
+        assertEquals('O', board.getCurrentPlayer());
     }
 }
