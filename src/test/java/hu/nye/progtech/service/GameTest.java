@@ -1,6 +1,7 @@
 package hu.nye.progtech.service;
 
-import hu.nye.progtech.domain.Board;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.*;
 
 import java.io.*;
@@ -36,8 +37,9 @@ class GameTest {
         game.makeMove(0, 0); // X lépése
         game.makeMove(0, 1); // O lépése
 
-        String saveFilePath = "test_save.md";
-        game.saveGame(saveFilePath);
+        // használjuk a Game.getSaveFilePath-et, hogy biztosan ugyanoda nézzünk, ahova a Game ment
+        String saveFilePath = game.getSaveFilePath("test_save.md");
+        game.saveGame("test_save.md");
 
         File savedGameFile = new File(saveFilePath);
         Assertions.assertTrue(savedGameFile.exists(), "A mentett fájl nem található!");
@@ -70,16 +72,15 @@ class GameTest {
         }
     }
 
-
-
     @Test
     void testLoadGame() throws IOException {
         game.setPlayerName("TestPlayer");
         game.startNewGame();
         game.makeMove(0, 0);  // X lépése
         game.makeMove(0, 1);  // O lépése
-        String saveFilePath = "test_save.md";
-        game.saveGame(saveFilePath);
+
+        String saveFilePath = game.getSaveFilePath("test_save.md");
+        game.saveGame("test_save.md");
 
         Game loadedGame = new Game();
         loadedGame.loadGame(saveFilePath);
@@ -93,6 +94,64 @@ class GameTest {
         // Ellenőrizzük, hogy a lépések is megfelelően lettek betöltve
         Assertions.assertEquals('X', loadedGame.getBoard().getCell(0, 0)); // X lépése
         Assertions.assertEquals('O', loadedGame.getBoard().getCell(0, 1)); // O lépése
+
+        // töröljük a mentést
+        File f = new File(saveFilePath);
+        if (f.exists()) {
+            boolean deleted = f.delete();
+            if (!deleted) {
+                logger.warn("Nem sikerült törölni a teszt mentést: {}", saveFilePath);
+            }
+        }
+    }
+
+    @Test
+    void testSaveAndDeleteTempFile() throws Exception {
+        Game g = new Game();
+        g.setPlayerName("Tmp");
+        g.startNewGame();
+        g.makeMove(0,0);
+        String path = g.getSaveFilePath("tmp_test_save.md");
+        g.saveGame("tmp_test_save.md");
+        File f = new File(path);
+        assertTrue(f.exists());
+        boolean deleted = f.delete();
+        assertTrue(deleted || !f.exists());
+    }
+
+    @Test
+    void saveCreatesFileAndLoadWorks() throws Exception {
+        Game g = new Game();
+        g.setPlayerName("IOTest");
+        g.startNewGame();
+        g.makeMove(0,0);
+        String path = g.getSaveFilePath("iotest.md");
+        g.saveGame("iotest.md");
+        File f = new File(path);
+        assertTrue(f.exists());
+        Game loaded = new Game();
+        loaded.loadGame(path);
+        assertEquals(g.getPlayerName(), loaded.getPlayerName());
+        // cleanup
+        f.delete();
+    }
+
+    @Test
+    void saveAndLoadRoundtrip() throws IOException {
+        Game g = new Game();
+        g.setPlayerName("T");
+        g.startNewGame();
+        g.makeMove(0,0); // X
+        g.makeMove(0,1); // O
+        String path = g.getSaveFilePath("tmp_test.md");
+        g.saveGame("tmp_test.md");
+
+        Game loaded = new Game();
+        loaded.loadGame(path);
+        assertEquals(g.getPlayerName(), loaded.getPlayerName());
+        assertEquals('X', loaded.getBoard().getCell(0,0));
+        // cleanup
+        new File(path).delete();
     }
 
 }

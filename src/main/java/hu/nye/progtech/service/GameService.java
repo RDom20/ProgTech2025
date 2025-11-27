@@ -1,51 +1,53 @@
 package hu.nye.progtech.service;
 
-import hu.nye.progtech.domain.Board;
-import hu.nye.progtech.domain.Coordinate;
-import hu.nye.progtech.domain.Player;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class GameService {
-    private static final int WIN_LENGTH = 5;  // Nyerési hossz
-    private final Random random = new Random();
-    private static final int MAP_SIZE = 10;  // Tábla mérete (10x10-es tábla)
+import hu.nye.progtech.domain.Board;
+import hu.nye.progtech.domain.Coordinate;
+import hu.nye.progtech.domain.Player;
 
+
+
+/**
+ * Játékszolgáltatások: nyerés ellenőrzés, AI lépés választás.
+ */
+public class GameService {
+    private static final int WIN_LENGTH = 5;
+    private final Random random = new Random();
+
+    // alapirányok (négy fő irány) - a diagonális ellenőrzés külön metódusban van
     private static final int[][] DIRECTIONS = {
-            {-1, 0}, // fel
-            {1, 0},  // le
-            {0, -1}, // balra
-            {0, 1}   // jobbra
+            {-1, 0}, {1, 0}, {0, -1}, {0, 1}
     };
 
     public boolean hasWon(Board board, char symbol) {
-        // Ellenőrizzük, hogy van-e nyerő sorozat
-        for (int row = 0; row < MAP_SIZE; row++) {
-            for (int col = 0; col < MAP_SIZE; col++) {
+        int size = board.getSize();
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
                 if (board.getCell(row, col) == symbol) {
-                    // Minden irányt végigellenőrzünk
                     for (int[] direction : DIRECTIONS) {
                         if (checkDirection(board, row, col, direction[0], direction[1], symbol)) {
-                            return true;  // Nyert
+                            return true;
                         }
                     }
-
-                    // Ellenőrizzük az átlókat
                     if (checkDiagonal(board, row, col, symbol)) {
-                        return true;  // Nyert átlósan
+                        return true;
                     }
                 }
             }
         }
-        return false;  // Ha nincs nyerő sorozat
+        return false;
     }
 
     private boolean checkDiagonal(Board board, int row, int col, char symbol) {
-        // Balról jobbra átló (felfelé-balra)
+        final int size = board.getSize();
+
+        // bal-fel / jobb-le átló
         int count = 1;
-        int r = row - 1, c = col - 1;
+        int r = row - 1;
+        int c = col - 1;
         while (r >= 0 && c >= 0 && board.getCell(r, c) == symbol) {
             count++;
             r--;
@@ -53,39 +55,41 @@ public class GameService {
         }
         r = row + 1;
         c = col + 1;
-        while (r < MAP_SIZE && c < MAP_SIZE && board.getCell(r, c) == symbol) {
+        while (r < size && c < size && board.getCell(r, c) == symbol) {
             count++;
             r++;
             c++;
         }
-        if (count >= WIN_LENGTH) return true;  // Ha találtunk 4-et
-
-        // Jobbról balra átló (lefelé-jobbra)
-        count = 1;
-        r = row + 1;
-        c = col - 1;
-        while (r < MAP_SIZE && c >= 0 && board.getCell(r, c) == symbol) {
-            count++;
-            r++;
-            c--;
+        if (count >= WIN_LENGTH) {
+            return true;
         }
+
+        // jobb-fel / bal-le átló
+        count = 1;
         r = row - 1;
         c = col + 1;
-        while (r >= 0 && c < MAP_SIZE && board.getCell(r, c) == symbol) {
+        while (r >= 0 && c < size && board.getCell(r, c) == symbol) {
             count++;
             r--;
             c++;
         }
-        return count >= WIN_LENGTH;  // Ha találtunk 4-et
+        r = row + 1;
+        c = col - 1;
+        while (r < size && c >= 0 && board.getCell(r, c) == symbol) {
+            count++;
+            r++;
+            c--;
+        }
+        return count >= WIN_LENGTH;
     }
 
-
-    private boolean checkDirection(Board board, int row, int col, int rowIncrement, int colIncrement, char symbol) {
+    private boolean checkDirection(Board board, int row, int col, int rowInc, int colInc, char symbol) {
+        int size = board.getSize();
         int count = 1;
         for (int i = 1; i < WIN_LENGTH; i++) {
-            int newRow = row + i * rowIncrement;
-            int newCol = col + i * colIncrement;
-            if (newRow >= 0 && newRow < MAP_SIZE && newCol >= 0 && newCol < MAP_SIZE && board.getCell(newRow, newCol) == symbol) {
+            int newRow = row + i * rowInc;
+            int newCol = col + i * colInc;
+            if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size && board.getCell(newRow, newCol) == symbol) {
                 count++;
             } else {
                 break;
@@ -99,34 +103,37 @@ public class GameService {
         if (aiMove == null) {
             aiMove = tryToBlockPlayer(board, ai);
         }
-        return aiMove != null ? aiMove : tryRandomMove(board);  // Ha nincs nyerő vagy blokkoló lépés, véletlen lépés
+        return aiMove != null ? aiMove : tryRandomMove(board);
     }
 
     public Coordinate tryRandomMove(Board board) {
         List<Coordinate> emptyCells = new ArrayList<>();
-        for (int row = 0; row < MAP_SIZE; row++) {
-            for (int col = 0; col < MAP_SIZE; col++) {
-                if (board.getCell(row, col) == '.') {  // Üres mező ellenőrzése
-                    emptyCells.add(new Coordinate(row, col));  // Üres mező hozzáadása
+        int size = board.getSize();
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (board.getCell(row, col) == '.') {
+                    emptyCells.add(new Coordinate(row, col));
                 }
             }
         }
-
         if (!emptyCells.isEmpty()) {
-            return emptyCells.get(random.nextInt(emptyCells.size()));  // Véletlenszerűen választunk egy üres mezőt
+            return emptyCells.get(random.nextInt(emptyCells.size()));
         }
         return null;
     }
 
     private Coordinate tryToWin(Board board, Player ai) {
-        for (int row = 0; row < MAP_SIZE; row++) {
-            for (int col = 0; col < MAP_SIZE; col++) {
+        int size = board.getSize();
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
                 if (board.getCell(row, col) == '.') {
-                    board.placeSymbol(row, col, ai.getSymbol());
-                    if (hasWon(board, ai.getSymbol())) {
+                    // szimuláljuk a lépést setCell-el (nem placeSymbol), majd visszaállítjuk
+                    board.setCell(row, col, ai.getSymbol());
+                    boolean win = hasWon(board, ai.getSymbol());
+                    board.setCell(row, col, '.'); // visszaállítás
+                    if (win) {
                         return new Coordinate(row, col);
                     }
-                    board.placeSymbol(row, col, '.');  // Visszavonjuk a lépést
                 }
             }
         }
@@ -134,58 +141,44 @@ public class GameService {
     }
 
     private Coordinate tryToBlockPlayer(Board board, Player ai) {
-        char playerSymbol = ai.getSymbol() == 'X' ? 'O' : 'X';  // Ha AI 'X', akkor a játékos 'O', és fordítva
+        char playerSymbol = ai.getSymbol() == 'X' ? 'O' : 'X';
+        int size = board.getSize();
 
-        // Négy irányban kell keresni: vízszintes, függőleges, balról jobbra átló, jobbról balra átló
+        // teljes iránykészlet (8 irány) a blokkoláshoz
         int[][] directions = {
-                {-1, 0},  // függőleges felfelé
-                {1, 0},   // függőleges lefelé
-                {0, -1},  // vízszintes balra
-                {0, 1},   // vízszintes jobbra
-                {-1, -1}, // balról jobbra átló (felfelé-balra)
-                {1, 1}    // jobbról balra átló (lefelé-jobbra)
+                {-1, 0}, {1, 0}, {0, -1}, {0, 1},
+                {-1, -1}, {1, 1}, {-1, 1}, {1, -1}
         };
 
-        // Végigmegyünk a táblán
-        for (int row = 0; row < MAP_SIZE; row++) {
-            for (int col = 0; col < MAP_SIZE; col++) {
-                if (board.getCell(row, col) == playerSymbol) {  // Ha a játékosnak van egy jele a mezőn
-                    // Minden irányt megnézünk
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (board.getCell(row, col) == playerSymbol) {
                     for (int[] direction : directions) {
-                        int count = 1;  // Már megtaláltunk egy jelet, most keresünk többit
-                        List<Coordinate> potentialBlockCoordinates = new ArrayList<>();
-
-                        // Keressük a sorozatot a megfelelő irányban
+                        int count = 1;
+                        List<Coordinate> potential = new ArrayList<>();
                         for (int i = 1; i < WIN_LENGTH; i++) {
-                            int newRow = row + i * direction[0];
-                            int newCol = col + i * direction[1];
-
-                            // Ha érvényes a mező
-                            if (newRow >= 0 && newRow < MAP_SIZE && newCol >= 0 && newCol < MAP_SIZE) {
-                                if (board.getCell(newRow, newCol) == playerSymbol) {
-                                    count++;  // Növeljük a sorozatot
-                                } else if (board.getCell(newRow, newCol) == '.') {
-                                    // Ha üres mezőt találunk a sorozat végén, hozzáadjuk a potenciális blokkolási helyekhez
-                                    potentialBlockCoordinates.add(new Coordinate(newRow, newCol));
+                            int nr = row + i * direction[0];
+                            int nc = col + i * direction[1];
+                            if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                                char cell = board.getCell(nr, nc);
+                                if (cell == playerSymbol) {
+                                    count++;
+                                } else if (cell == '.') {
+                                    potential.add(new Coordinate(nr, nc));
                                 } else {
-                                    break;  // Ha egy másik jel jön, megszakítjuk a keresést
+                                    break;
                                 }
                             } else {
-                                break;  // Ha kimegyünk a tábláról, megállunk
+                                break;
                             }
                         }
-
-                        // Ha legalább 2 jelet találtunk és van üres mező, ahol blokkot tehetünk
-                        if (count >= 2 && !potentialBlockCoordinates.isEmpty()) {
-                            for (Coordinate coordinate : potentialBlockCoordinates) {
-                                int nextRow = coordinate.getRow();
-                                int nextCol = coordinate.getCol();
-
-                                // Biztosítjuk, hogy a következő mező üres legyen
-                                if (nextRow >= 0 && nextRow < MAP_SIZE && nextCol >= 0 && nextCol < MAP_SIZE
-                                        && board.getCell(nextRow, nextCol) == '.') {
-                                    board.placeSymbol(nextRow, nextCol, ai.getSymbol());
-                                    return new Coordinate(nextRow, nextCol);  // Visszaadjuk a blokk lépést
+                        if (count >= 2 && !potential.isEmpty()) {
+                            for (Coordinate c : potential) {
+                                if (board.getCell(c.getRow(), c.getCol()) == '.') {
+                                    // használjunk setCell-et a tényleges lépéshez (nem placeSymbol), vagy ha a Game logikája
+                                    // elvárja a placeSymbol viselkedést, akkor itt a Game-nek kell meghívnia placeSymbol-t.
+                                    board.setCell(c.getRow(), c.getCol(), ai.getSymbol());
+                                    return new Coordinate(c.getRow(), c.getCol());
                                 }
                             }
                         }
@@ -193,7 +186,6 @@ public class GameService {
                 }
             }
         }
-
-        return null;  // Ha nem találunk blokkolható helyet
+        return null;
     }
 }

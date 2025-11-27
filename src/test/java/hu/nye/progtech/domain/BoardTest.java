@@ -1,6 +1,8 @@
 package hu.nye.progtech.domain;
 
 import org.junit.jupiter.api.Test;
+
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BoardTest {
@@ -33,5 +35,33 @@ class BoardTest {
         board.setCurrentPlayer('O');
 
         assertEquals('O', board.getCurrentPlayer());
+    }
+
+    @Test
+    void testPlaceSymbolOutOfBoundsThrows() {
+        Board b = new Board(5);
+        assertThrows(IndexOutOfBoundsException.class, () -> b.placeSymbol(-1, 0, 'X'));
+        assertThrows(IndexOutOfBoundsException.class, () -> b.placeSymbol(0, 5, 'X'));
+    }
+
+    @Test
+    void testPlaceSymbolOnOccupiedThrows() {
+        Board b = new Board(3);
+        b.placeSymbol(1,1,'X');
+        assertThrows(IllegalArgumentException.class, () -> b.placeSymbol(1,1,'O'));
+    }
+
+    void placeSymbolVarious(int r, int c, char s) {
+        Board b = new Board(5);
+        b.placeSymbol(r,c,s);
+        assertEquals(s, b.getCell(r,c));
+    }
+
+    @Test
+    void testGetCellsCopyIsIndependent() {
+        Board b = new Board(3);
+        char[][] copy = b.getCellsCopy();
+        copy[0][0] = 'Z';
+        assertEquals('.', b.getCell(0,0));
     }
 }

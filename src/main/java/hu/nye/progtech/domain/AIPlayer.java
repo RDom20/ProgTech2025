@@ -1,36 +1,46 @@
-package hu.nye.progtech;
+package hu.nye.progtech.domain;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
-/*
- AIPlayer — egyszerű célzó AI:
- - random lövéseket ad, amíg találat nincs
- - találat után elmenti az első találatot és körülnéz 4 irányban
- - ha találatot ér el egy irányban, abban az irányban folytatja (lépésről lépésre)
- - ha mellélő, az adott irányt kizárja
- - az AI addig lő egymás után, amíg találatot ér el (a játékos nem lő közben)
+
+/**
+ * Egyszerű AI játékos célzó logikával.
+ * Javítások:
+ * - minden lőtt pozíciót rögzítünk a shotsTaken halmazban,
+ * - randomShot először összegyűjti az elérhető mezőket (elkerüli a végtelen ciklust),
+ * - nextShot és notifyShotResult a shotsTaken-et használja, így soha nem lő újra kipróbált mezőre,
+ * - süllyesztéskor (wasSunk) a targeting állapot törlődik, de a shotsTaken megmarad.
  */
 public class AIPlayer {
 
     private final int boardSize;
     private final Set<String> shotsTaken = new HashSet<>();
 
-    // Targeting állapot
     private int firstHitRow = -1;
     private int firstHitCol = -1;
     private int lastHitRow = -1;
     private int lastHitCol = -1;
 
-    // lehetséges irányok az első találat körül (1: row+, 2: row-, 3: col+, 4: col-)
     private final List<Integer> possibleDirections = new ArrayList<>();
-
-    // ha már kiválasztott irány, ezt tároljuk (0 = nincs)
     private int currentDirection = 0;
 
-    private final Random rnd = new Random();
+    private final Random rnd;
 
     public AIPlayer(int boardSize) {
+        this(boardSize, new Random());
+    }
+
+    // Konstruktor seed-elhető Random-hoz (hasznos teszteléshez)
+    public AIPlayer(int boardSize, Random rnd) {
         this.boardSize = boardSize;
+        this.rnd = rnd == null ? new Random() : rnd;
         resetTargeting();
     }
 
@@ -48,24 +58,36 @@ public class AIPlayer {
         return r + "," + c;
     }
 
-    // Véletlenszerű lövés (olyan mezőt választ, amit még nem lőttek)
+    /**
+     * Visszaad egy véletlenszerű, még nem kipróbált mezőt.
+     * Ha nincs több elérhető mező, null-t ad vissza.
+     */
     public int[] randomShot() {
-        int r, c;
-        do {
-            r = rnd.nextInt(boardSize);
-            c = rnd.nextInt(boardSize);
-        } while (shotsTaken.contains(posKey(r, c)));
-        shotsTaken.add(posKey(r, c));
-        return new int[]{r, c};
+        List<int[]> available = new ArrayList<>();
+        for (int r = 0; r < boardSize; r++) {
+            for (int c = 0; c < boardSize; c++) {
+                if (!shotsTaken.contains(posKey(r, c))) {
+                    available.add(new int[]{r, c});
+                }
+            }
+        }
+        if (available.isEmpty()) {
+            return null;
+        }
+        int[] pick = available.get(rnd.nextInt(available.size()));
+        shotsTaken.add(posKey(pick[0], pick[1]));
+        return pick;
     }
 
-    // Következő lövés célozva (ha van aktív találat), különben randomShot()
+    /**
+     * Visszaadja a következő célpontot: ha van aktív targeting, azt folytatja,
+     * különben véletlenszerű, még nem kipróbált mezőt ad.
+     */
     public int[] nextShot() {
         if (firstHitRow < 0) {
             return randomShot();
         }
 
-        // Ha van irány próbáljuk meg a következő cellát az utolsó találattól
         if (currentDirection != 0) {
             int nr = lastHitRow;
             int nc = lastHitCol;
@@ -74,17 +96,16 @@ public class AIPlayer {
                 case 2 -> nr--;
                 case 3 -> nc++;
                 case 4 -> nc--;
+                default -> { /* no-op */ }
             }
             if (isValidShot(nr, nc)) {
                 shotsTaken.add(posKey(nr, nc));
                 return new int[]{nr, nc};
             } else {
-                // az irány lezárult vagy nem valós: visszaáll az irány és másikkal próbálkozik
                 currentDirection = 0;
             }
         }
 
-        // nincs aktuális irány: választ véletlenszerűen egyet a még lehetséges irányokból (az első találat körül)
         Collections.shuffle(possibleDirections, rnd);
         Iterator<Integer> it = possibleDirections.iterator();
         while (it.hasNext()) {
@@ -96,46 +117,51 @@ public class AIPlayer {
                 case 2 -> cr--;
                 case 3 -> cc++;
                 case 4 -> cc--;
+                default -> { /* no-op */ }
             }
             if (isValidShot(cr, cc)) {
-                // ezt választja, beállítja az aktuális irányt is
                 currentDirection = dir;
                 shotsTaken.add(posKey(cr, cc));
                 return new int[]{cr, cc};
             } else {
-                // ezt az irányt nem próbálja többet
                 it.remove();
             }
         }
 
-        // ha már nincs több irány, reset és random
+        // ha nem találunk targeting célpontot, reset és random
         resetTargeting();
         return randomShot();
     }
 
-    // A játékmechanika hívja ezt, amikor megvan a lövés eredménye.
-    // shot: [row, col]; wasHit: találat-e; wasSunk: az adott lövés után elsüllyedt-e a célzott hajó
+    /**
+     * Értesítés a lövés eredményéről.
+     * - mindig jelöljük a lőtt mezőt kipróbáltnak,
+     * - találat esetén beállítjuk a targeting koordinátákat,
+     * - süllyesztéskor töröljük a targeting állapotot (de nem töröljük a shotsTaken-et).
+     */
     public void notifyShotResult(int[] shot, boolean wasHit, boolean wasSunk) {
-        int r = shot[0], c = shot[1];
+        int r = shot[0];
+        int c = shot[1];
+
+        // mindig jelöljük kipróbáltnak
+        shotsTaken.add(posKey(r, c));
+
         if (wasHit) {
             if (firstHitRow < 0) {
                 firstHitRow = r;
                 firstHitCol = c;
-                // még nem választott irányt
             }
-            // minden találat után az utolsó találat frissül (innen halad tovább, ha van irány)
             lastHitRow = r;
             lastHitCol = c;
         }
 
         if (wasSunk) {
-            // ha elsüllyedt a hajó, teljesen reseteli a targetinget
+            // süllyesztéskor töröljük a targeting állapotot, de a shotsTaken megmarad
             resetTargeting();
             return;
         }
 
         if (!wasHit) {
-            // ha mellélőtt és volt aktuális irány, azt az irányt kizárja
             if (currentDirection != 0) {
                 possibleDirections.remove(Integer.valueOf(currentDirection));
                 currentDirection = 0;
