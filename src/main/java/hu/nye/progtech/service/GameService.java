@@ -8,8 +8,6 @@ import hu.nye.progtech.domain.Board;
 import hu.nye.progtech.domain.Coordinate;
 import hu.nye.progtech.domain.Player;
 
-
-
 /**
  * Játékszolgáltatások: nyerés ellenőrzés, AI lépés választás.
  */

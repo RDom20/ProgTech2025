@@ -54,3 +54,4 @@ Logolás: SLF4J + Logback konfiguráció a futás közbeni diagnosztikához és 
 - Biztonságos mentés és perzisztencia: mentések fájlba és adatbázisba történnek, a fájlok kezelése és a DAO réteg tesztelve van (H2 in‑memory tesztek).
 
 - Karbantarthatóság: Checkstyle, logolás és jól strukturált kód segít a hosszú távú fenntartásban.
+
