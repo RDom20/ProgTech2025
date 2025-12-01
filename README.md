@@ -34,4 +34,6 @@ Teljes játéklogika: NxM méretű tábla támogatás (alapértelmezett 10×10),
 - **Fejlesztési környezet**: Java 21, Maven.
 - **Tesztek és riportok**:
 ```bash
-mvn clean verify
+mvn clean install
+```
+---
