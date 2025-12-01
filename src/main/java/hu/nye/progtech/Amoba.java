@@ -335,8 +335,10 @@ public class Amoba {
                         } while (exists);
                         newName = generated;
                         out.println("Új játékosnév beállítva: " + newName);
-                    } else {
+                    } else if ("0".equals(choice)) {
                         out.println("Folytatás a(z) " + newName + " profillal.");
+                    } else  {
+                        out.println("Hibás input");
                     }
                 }
 
